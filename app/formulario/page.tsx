@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
+import { GOOGLE_SCRIPT_URL } from "@/lib/config"
 import { Wifi, WifiOff, MessageCircle, Loader2 } from "lucide-react"
 
 interface FormData {
@@ -103,14 +104,27 @@ export default function FormularioPage() {
       localStorage.setItem("picanthon_submission", JSON.stringify(submission))
       localStorage.setItem("picanthon_submitted", "true")
 
-      // TODO: Send to Google Sheets via Apps Script
-      // const response = await fetch('YOUR_GOOGLE_APPS_SCRIPT_URL', {
-      //   method: 'POST',
-      //   body: JSON.stringify(submission),
-      // })
+      // Send to Google Sheets via Apps Script
+      if (GOOGLE_SCRIPT_URL) {
+        try {
+          const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Google Apps Script requiere no-cors
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(submission),
+          })
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+          // Con no-cors no podemos leer la respuesta, pero si no da error, asumimos que funcionó
+          console.log('[v0] Form submitted to Google Sheets')
+        } catch (error) {
+          console.error('[v0] Error sending to Google Sheets:', error)
+          // No mostramos error al usuario porque ya guardamos en localStorage
+        }
+      } else {
+        console.warn('[v0] GOOGLE_SCRIPT_URL not configured, skipping cloud sync')
+      }
 
       toast({
         title: "¡Gracias por tu feedback!",

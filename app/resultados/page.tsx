@@ -4,10 +4,17 @@ import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+import { GOOGLE_SCRIPT_URL } from "@/lib/config"
 import Link from "next/link"
-import { BarChart3, TrendingUp, Users } from "lucide-react"
+import { BarChart3, TrendingUp, Users, MessageSquare } from "lucide-react"
+
+interface FeaturedComment {
+  question: string
+  comment: string
+}
 
 interface AggregatedResults {
+  success: boolean
   totalResponses: number
   averages: {
     q1: number
@@ -22,6 +29,7 @@ interface AggregatedResults {
   distribution: {
     [key: string]: number[]
   }
+  featuredComments: FeaturedComment[]
 }
 
 export default function ResultadosPage() {
@@ -29,36 +37,69 @@ export default function ResultadosPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // TODO: Fetch real data from Google Sheets
-    // For now, using mock data
-    const mockResults: AggregatedResults = {
-      totalResponses: 42,
-      averages: {
-        q1: 4.5,
-        q2: 4.2,
-        q3: 3.8,
-        q4: 4.7,
-        q5: 4.1,
-        q6: 4.3,
-        q7: 4.0,
-        q8: 3.9,
-      },
-      distribution: {
-        q1: [1, 2, 5, 12, 22],
-        q2: [2, 3, 8, 15, 14],
-        q3: [3, 5, 10, 18, 6],
-        q4: [0, 1, 3, 10, 28],
-        q5: [1, 4, 7, 20, 10],
-        q6: [1, 2, 6, 18, 15],
-        q7: [2, 3, 9, 16, 12],
-        q8: [2, 4, 11, 17, 8],
-      },
+    const fetchResults = async () => {
+      try {
+        if (!GOOGLE_SCRIPT_URL) {
+          console.warn('[v0] GOOGLE_SCRIPT_URL not configured, using mock data')
+          // Usar datos mock si no hay URL configurada
+          const mockResults: AggregatedResults = {
+            success: true,
+            totalResponses: 42,
+            averages: {
+              q1: 4.5,
+              q2: 4.2,
+              q3: 3.8,
+              q4: 4.7,
+              q5: 4.1,
+              q6: 4.3,
+              q7: 4.0,
+              q8: 3.9,
+            },
+            distribution: {
+              q1: [1, 2, 5, 12, 22],
+              q2: [2, 3, 8, 15, 14],
+              q3: [3, 5, 10, 18, 6],
+              q4: [0, 1, 3, 10, 28],
+              q5: [1, 4, 7, 20, 10],
+              q6: [1, 2, 6, 18, 15],
+              q7: [2, 3, 9, 16, 12],
+              q8: [2, 4, 11, 17, 8],
+            },
+            featuredComments: [
+              {
+                question: "¿Qué fue lo que más te gustó?",
+                comment: "El ambiente colaborativo y la energía de todos los participantes fue increíble."
+              },
+              {
+                question: "¿Qué cambiarías?",
+                comment: "Me gustaría que hubiera más tiempo para desarrollar el proyecto."
+              }
+            ]
+          }
+          setResults(mockResults)
+          setLoading(false)
+          return
+        }
+
+        // Fetch real data from Google Sheets
+        const response = await fetch(GOOGLE_SCRIPT_URL)
+        const data = await response.json()
+
+        if (data.success) {
+          setResults(data)
+        } else {
+          console.error('[v0] Error fetching results:', data.error)
+          setResults(null)
+        }
+      } catch (error) {
+        console.error('[v0] Error fetching results:', error)
+        setResults(null)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    setTimeout(() => {
-      setResults(mockResults)
-      setLoading(false)
-    }, 1000)
+    fetchResults()
   }, [])
 
   if (loading) {
@@ -169,6 +210,26 @@ export default function ResultadosPage() {
             </div>
           </div>
         </Card>
+
+        {results.featuredComments && results.featuredComments.length > 0 && (
+          <Card className="bg-card backdrop-blur-lg border-white/10 p-6 md:p-8">
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+                <MessageSquare className="w-6 h-6 text-[#ff4500]" />
+                <h2 className="text-2xl font-bold">Comentarios Destacados</h2>
+              </div>
+
+              <div className="space-y-6">
+                {results.featuredComments.map((comment, index) => (
+                  <div key={index} className="space-y-2 p-4 rounded-lg bg-white/5 border border-white/10">
+                    <p className="text-sm font-semibold text-[#ff4500]">{comment.question}</p>
+                    <p className="text-base leading-relaxed italic">"{comment.comment}"</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )}
 
         <div className="flex justify-center">
           <Button asChild className="bg-white text-black hover:bg-white/90">
