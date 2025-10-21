@@ -135,17 +135,17 @@ export default function ResultadosPage() {
   ]
 
   // Calcular NPS basado en Q1 (escala 1-5)
-  // Detractores: 1-3, Pasivos: 4, Promotores: 5
+  // Detractores: 1-2, Pasivos: 3-4, Promotores: 5
   const calculateNPS = () => {
     if (!results.distribution.q1) return { nps: 0, promoters: 0, passives: 0, detractors: 0 }
 
     const distribution = results.distribution.q1
     const total = results.totalResponses
 
-    // 1-3 = Detractores (índices 0, 1, 2)
-    const detractors = distribution[0] + distribution[1] + distribution[2]
-    // 4 = Pasivos (índice 3)
-    const passives = distribution[3]
+    // 1-2 = Detractores (índices 0, 1)
+    const detractors = distribution[0] + distribution[1]
+    // 3-4 = Pasivos (índices 2, 3)
+    const passives = distribution[2] + distribution[3]
     // 5 = Promotores (índice 4)
     const promoters = distribution[4]
 
@@ -191,7 +191,7 @@ export default function ResultadosPage() {
                   ¿Cuán probable es que vuelvas a anotarte a la próxima Picanthon?
                 </p>
                 <div className="text-6xl md:text-7xl font-bold text-[#ff4500]">
-                  {npsData.nps > 0 ? '+' : ''}{npsData.nps}
+                  {npsData.nps}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {npsData.nps >= 50 ? 'Excelente' : npsData.nps >= 0 ? 'Bueno' : 'Necesita mejoras'}
@@ -207,12 +207,12 @@ export default function ResultadosPage() {
                 <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
                   <div className="text-2xl font-bold text-yellow-500">{npsData.passives}%</div>
                   <div className="text-xs text-muted-foreground mt-1">Pasivos</div>
-                  <div className="text-xs text-muted-foreground">(4★)</div>
+                  <div className="text-xs text-muted-foreground">(3-4★)</div>
                 </div>
                 <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
                   <div className="text-2xl font-bold text-red-500">{npsData.detractors}%</div>
                   <div className="text-xs text-muted-foreground mt-1">Detractores</div>
-                  <div className="text-xs text-muted-foreground">(1-3★)</div>
+                  <div className="text-xs text-muted-foreground">(1-2★)</div>
                 </div>
               </div>
             </div>
