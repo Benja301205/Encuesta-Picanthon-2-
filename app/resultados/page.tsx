@@ -134,6 +134,36 @@ export default function ResultadosPage() {
     "¿Qué te pareció la decisión de los jueces?",
   ]
 
+  // Calcular NPS basado en Q1 (escala 1-5)
+  // Detractores: 1-3, Pasivos: 4, Promotores: 5
+  const calculateNPS = () => {
+    if (!results.distribution.q1) return { nps: 0, promoters: 0, passives: 0, detractors: 0 }
+
+    const distribution = results.distribution.q1
+    const total = results.totalResponses
+
+    // 1-3 = Detractores (índices 0, 1, 2)
+    const detractors = distribution[0] + distribution[1] + distribution[2]
+    // 4 = Pasivos (índice 3)
+    const passives = distribution[3]
+    // 5 = Promotores (índice 4)
+    const promoters = distribution[4]
+
+    // NPS = (% Promotores) - (% Detractores)
+    const promotersPercent = (promoters / total) * 100
+    const detractorsPercent = (detractors / total) * 100
+    const nps = Math.round(promotersPercent - detractorsPercent)
+
+    return {
+      nps,
+      promoters: Math.round(promotersPercent),
+      passives: Math.round((passives / total) * 100),
+      detractors: Math.round(detractorsPercent)
+    }
+  }
+
+  const npsData = calculateNPS()
+
   return (
     <div className="min-h-screen py-12 px-4">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -147,29 +177,44 @@ export default function ResultadosPage() {
           </div>
         </div>
 
+        {/* NPS Card */}
         <Card className="bg-card backdrop-blur-lg border-white/10 p-6 md:p-8">
           <div className="space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-white/10">
               <TrendingUp className="w-6 h-6 text-[#ff4500]" />
-              <h2 className="text-2xl font-bold">Promedios Generales</h2>
+              <h2 className="text-2xl font-bold">Net Promoter Score (NPS)</h2>
             </div>
 
-            <div className="space-y-6">
-              {Object.entries(results.averages).map(([key, average], index) => (
-                <div key={key} className="space-y-2">
-                  <div className="flex justify-between items-start gap-4">
-                    <p className="text-sm leading-relaxed flex-1">{questions[index]}</p>
-                    <span className="text-2xl font-bold text-[#ff4500] min-w-[3rem] text-right">
-                      {average.toFixed(1)}
-                    </span>
-                  </div>
-                  <Progress value={(average / 5) * 100} className="h-2 bg-white/10" />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>1</span>
-                    <span>5</span>
-                  </div>
+            <div className="text-center space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  ¿Cuán probable es que vuelvas a anotarte a la próxima Picanthon?
+                </p>
+                <div className="text-6xl md:text-7xl font-bold text-[#ff4500]">
+                  {npsData.nps > 0 ? '+' : ''}{npsData.nps}
                 </div>
-              ))}
+                <p className="text-sm text-muted-foreground">
+                  {npsData.nps >= 50 ? 'Excelente' : npsData.nps >= 0 ? 'Bueno' : 'Necesita mejoras'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 mt-6">
+                <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                  <div className="text-2xl font-bold text-green-500">{npsData.promoters}%</div>
+                  <div className="text-xs text-muted-foreground mt-1">Promotores</div>
+                  <div className="text-xs text-muted-foreground">(5★)</div>
+                </div>
+                <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                  <div className="text-2xl font-bold text-yellow-500">{npsData.passives}%</div>
+                  <div className="text-xs text-muted-foreground mt-1">Pasivos</div>
+                  <div className="text-xs text-muted-foreground">(4★)</div>
+                </div>
+                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                  <div className="text-2xl font-bold text-red-500">{npsData.detractors}%</div>
+                  <div className="text-xs text-muted-foreground mt-1">Detractores</div>
+                  <div className="text-xs text-muted-foreground">(1-3★)</div>
+                </div>
+              </div>
             </div>
           </div>
         </Card>
