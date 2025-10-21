@@ -284,7 +284,7 @@ export default function ResultadosPage() {
 
         <footer className="text-center text-muted-foreground text-sm pt-4">
           <p className="flex items-center justify-center gap-2">
-            🤖 Powered by <span className="text-[#ff4500] font-semibold">Picante</span>
+            🤖 Powered by <span className="text-[#ff4500] font-semibold">Alertly</span>
           </p>
         </footer>
       </div>

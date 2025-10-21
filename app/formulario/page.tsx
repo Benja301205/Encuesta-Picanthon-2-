@@ -309,7 +309,7 @@ export default function FormularioPage() {
 
         <footer className="text-center text-muted-foreground text-sm">
           <p className="flex items-center justify-center gap-2">
-            🤖 Powered by <span className="text-[#ff4500] font-semibold">Picante</span>
+            🤖 Powered by <span className="text-[#ff4500] font-semibold">Alertly</span>
           </p>
         </footer>
       </div>
