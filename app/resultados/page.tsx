@@ -135,7 +135,7 @@ export default function ResultadosPage() {
   ]
 
   // Calcular NPS basado en Q1 (escala 1-5)
-  // Detractores: 1-2, Pasivos: 3-4, Promotores: 5
+  // Detractores: 1-2, Pasivos: 3, Promotores: 4-5
   const calculateNPS = () => {
     if (!results.distribution.q1) return { nps: 0, promoters: 0, passives: 0, detractors: 0 }
 
@@ -144,10 +144,10 @@ export default function ResultadosPage() {
 
     // 1-2 = Detractores (índices 0, 1)
     const detractors = distribution[0] + distribution[1]
-    // 3-4 = Pasivos (índices 2, 3)
-    const passives = distribution[2] + distribution[3]
-    // 5 = Promotores (índice 4)
-    const promoters = distribution[4]
+    // 3 = Pasivos (índice 2)
+    const passives = distribution[2]
+    // 4-5 = Promotores (índices 3, 4)
+    const promoters = distribution[3] + distribution[4]
 
     // NPS = (% Promotores) - (% Detractores)
     const promotersPercent = (promoters / total) * 100
@@ -202,12 +202,12 @@ export default function ResultadosPage() {
                 <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
                   <div className="text-2xl font-bold text-green-500">{npsData.promoters}%</div>
                   <div className="text-xs text-muted-foreground mt-1">Promotores</div>
-                  <div className="text-xs text-muted-foreground">(5★)</div>
+                  <div className="text-xs text-muted-foreground">(4-5★)</div>
                 </div>
                 <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
                   <div className="text-2xl font-bold text-yellow-500">{npsData.passives}%</div>
                   <div className="text-xs text-muted-foreground mt-1">Pasivos</div>
-                  <div className="text-xs text-muted-foreground">(3-4★)</div>
+                  <div className="text-xs text-muted-foreground">(3★)</div>
                 </div>
                 <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
                   <div className="text-2xl font-bold text-red-500">{npsData.detractors}%</div>
