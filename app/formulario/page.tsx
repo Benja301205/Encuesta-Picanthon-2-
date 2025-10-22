@@ -89,7 +89,8 @@ export default function FormularioPage() {
     setIsSubmitting(true)
 
     try {
-      const submissionId = crypto.randomUUID()
+      // Generate unique ID compatible with older browsers and WhatsApp
+      const submissionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       const timestamp = new Date().toISOString()
 
       const submission = {
