@@ -72,6 +72,20 @@ export default function FormularioPage() {
     }
   }, [])
 
+  const generateUUID = () => {
+    // Fallback para navegadores que no soportan crypto.randomUUID()
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID()
+    }
+
+    // Fallback manual compatible con todos los navegadores
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0
+      const v = c === 'x' ? r : (r & 0x3 | 0x8)
+      return v.toString(16)
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -89,7 +103,7 @@ export default function FormularioPage() {
     setIsSubmitting(true)
 
     try {
-      const submissionId = crypto.randomUUID()
+      const submissionId = generateUUID()
       const timestamp = new Date().toISOString()
 
       const submission = {
