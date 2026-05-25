@@ -83,11 +83,9 @@ export default function HomePage() {
 
         <section className="poster">
           <div className="poster-no">
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <span className="poster-no-lbl" style={{ color: "var(--hot)" }}>Buenos Aires</span>
-              <span className="poster-no-lbl">Edición</span>
-            </div>
+            <span className="poster-no-lbl">Edición</span>
             <span className="poster-no-num">03</span>
+            <span className="poster-no-lbl">Buenos Aires</span>
           </div>
 
           <div className="poster-stage">
