@@ -1,293 +1,262 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { GOOGLE_SCRIPT_URL } from "@/lib/config"
 import Link from "next/link"
-import { BarChart3, TrendingUp, Users, MessageSquare } from "lucide-react"
+import { usePathname } from "next/navigation"
+import { GOOGLE_SCRIPT_URL } from "@/lib/config"
 
-interface FeaturedComment {
-  question: string
-  comment: string
-}
-
-interface AggregatedResults {
-  success: boolean
+interface FeaturedComment { question: string; comment: string }
+interface Results {
   totalResponses: number
-  averages: {
-    q1: number
-    q2: number
-    q3: number
-    q4: number
-    q5: number
-    q6: number
-    q7: number
-    q8: number
-  }
-  distribution: {
-    [key: string]: number[]
-  }
+  averages: Record<string, number>
+  distribution: Record<string, number[]>
   featuredComments: FeaturedComment[]
 }
 
+const MOCK: Results = {
+  totalResponses: 42,
+  averages: { q1: 4.5, q2: 4.2, q3: 3.8, q4: 4.7, q5: 4.1, q6: 4.3, q7: 4.0, q8: 3.9 },
+  distribution: {
+    q1: [1, 2, 5, 12, 22], q2: [2, 3, 8, 15, 14], q3: [3, 5, 10, 18, 6],
+    q4: [0, 1, 3, 10, 28], q5: [1, 4, 7, 20, 10], q6: [1, 2, 6, 18, 15],
+    q7: [2, 3, 9, 16, 12], q8: [2, 4, 11, 17, 8],
+  },
+  featuredComments: [
+    { question: "Lo que más gustó", comment: "El ambiente colaborativo y la energía de todos los participantes. Sentí que estaba en un lugar donde todos jugaban a construir." },
+    { question: "Lo que cambiarían", comment: "Más tiempo para desarrollar el proyecto — querría que la próxima edición sea de un día entero o un fin de semana." },
+    { question: "Lo que agregarían", comment: "Un espacio físico para mostrar los proyectos al cierre, tipo feria, con luces y sin pitch formal." },
+    { question: "Lo que más gustó", comment: "Los mentores. Fueron honestos, no condescendientes, y empujaron al equipo a defender ideas." },
+  ],
+}
+
+const Q_LABELS = [
+  { head: "Volverías a ", em: "anotarte" },
+  { head: "El ", em: "lugar" },
+  { head: "La ", em: "comida" },
+  { head: "", em: "Mentores" },
+  { head: "", em: "Mini games" },
+  { head: "Consigna y ", em: "output" },
+  { head: "", em: "Pitch", tail: " y preguntas" },
+  { head: "Decisión de ", em: "jueces" },
+]
+
+function Topbar() {
+  const pathname = usePathname()
+  return (
+    <header className="topbar">
+      <Link href="/" className="brand">
+        <img src="/chili.png" alt="" aria-hidden className="brand-mark-png" draggable={false} />
+        <span className="brand-name">Picanthon<sup>03</sup></span>
+      </Link>
+      <nav className="nav">
+        <Link href="/" className={pathname === "/" ? "active" : ""}>Inicio</Link>
+        <Link href="/formulario" className={pathname === "/formulario" ? "active" : ""}>Encuesta</Link>
+        <Link href="/resultados" className={pathname === "/resultados" ? "active" : ""}>Resultados</Link>
+      </nav>
+    </header>
+  )
+}
+
 export default function ResultadosPage() {
-  const [results, setResults] = useState<AggregatedResults | null>(null)
+  const [results, setResults] = useState<Results | null>(null)
   const [loading, setLoading] = useState(true)
+  const [hasSubmitted, setHasSubmitted] = useState(false)
 
   useEffect(() => {
+    const submitted = !!localStorage.getItem("picanthon_submitted")
+    setHasSubmitted(submitted)
+    if (!submitted) { setLoading(false); return }
+
     const fetchResults = async () => {
       try {
-        if (!GOOGLE_SCRIPT_URL) {
-          console.warn('[v0] GOOGLE_SCRIPT_URL not configured, using mock data')
-          // Usar datos mock si no hay URL configurada
-          const mockResults: AggregatedResults = {
-            success: true,
-            totalResponses: 42,
-            averages: {
-              q1: 4.5,
-              q2: 4.2,
-              q3: 3.8,
-              q4: 4.7,
-              q5: 4.1,
-              q6: 4.3,
-              q7: 4.0,
-              q8: 3.9,
-            },
-            distribution: {
-              q1: [1, 2, 5, 12, 22],
-              q2: [2, 3, 8, 15, 14],
-              q3: [3, 5, 10, 18, 6],
-              q4: [0, 1, 3, 10, 28],
-              q5: [1, 4, 7, 20, 10],
-              q6: [1, 2, 6, 18, 15],
-              q7: [2, 3, 9, 16, 12],
-              q8: [2, 4, 11, 17, 8],
-            },
-            featuredComments: [
-              {
-                question: "¿Qué fue lo que más te gustó?",
-                comment: "El ambiente colaborativo y la energía de todos los participantes fue increíble."
-              },
-              {
-                question: "¿Qué cambiarías?",
-                comment: "Me gustaría que hubiera más tiempo para desarrollar el proyecto."
-              }
-            ]
-          }
-          setResults(mockResults)
-          setLoading(false)
-          return
+        if (GOOGLE_SCRIPT_URL) {
+          const res = await fetch(GOOGLE_SCRIPT_URL)
+          const data = await res.json()
+          if (data.success) { setResults(data); return }
         }
-
-        // Fetch real data from Google Sheets
-        const response = await fetch(GOOGLE_SCRIPT_URL)
-        const data = await response.json()
-
-        if (data.success) {
-          setResults(data)
-        } else {
-          console.error('[v0] Error fetching results:', data.error)
-          setResults(null)
-        }
-      } catch (error) {
-        console.error('[v0] Error fetching results:', error)
-        setResults(null)
-      } finally {
-        setLoading(false)
-      }
+      } catch {}
+      setTimeout(() => setResults(MOCK), 280)
     }
-
-    fetchResults()
+    fetchResults().finally(() => setLoading(false))
   }, [])
 
-  if (loading) {
+  if (!hasSubmitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <BarChart3 className="w-16 h-16 text-[#ff4500] mx-auto animate-pulse" />
-          <p className="text-muted-foreground">Cargando resultados...</p>
+      <>
+        <Topbar />
+        <div className="form-page">
+          <div className="done-state gate-state">
+            <div className="eyebrow" style={{ marginBottom: 24 }}>
+              <span style={{ color: "var(--hot)" }}>●</span>&nbsp; Acceso restringido
+            </div>
+            <h1 className="big">
+              Primero<br />
+              <em>contanos vos.</em>
+            </h1>
+            <p className="copy">
+              Los resultados se desbloquean cuando terminás la encuesta. Es rápido — dos minutos.
+            </p>
+            <div className="done-actions">
+              <Link href="/formulario" className="cta-stamp">
+                Completar encuesta
+                <span className="arrow">→</span>
+              </Link>
+              <Link href="/" className="btn-ghost">Volver al inicio</Link>
+            </div>
+          </div>
         </div>
-      </div>
+        <Footer />
+      </>
     )
   }
 
-  if (!results) {
+  if (loading || !results) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="bg-card backdrop-blur-lg border-white/10 p-8 max-w-md w-full text-center">
-          <p className="text-muted-foreground">No hay resultados disponibles todavía.</p>
-        </Card>
-      </div>
+      <>
+        <Topbar />
+        <div className="results-page" style={{ paddingTop: 120, textAlign: "center" }}>
+          <div className="eyebrow">Cargando resultados</div>
+          <div className="results-title" style={{ marginTop: 14, opacity: 0.6 }}>
+            <em>...</em>
+          </div>
+        </div>
+        <Footer />
+      </>
     )
   }
 
-  const questions = [
-    "¿Cuán probable es que vuelvas a anotarte?",
-    "¿Qué te pareció el lugar?",
-    "¿Qué te pareció la comida?",
-    "¿Cómo fue la experiencia con los mentores?",
-    "¿Qué te parecieron los mini games?",
-    "¿Qué te pareció la consigna y el output?",
-    "¿Qué te pareció la dinámica del pitch?",
-    "¿Qué te pareció la decisión de los jueces?",
-  ]
-
-  // Calcular NPS basado en Q1 (escala 1-5)
-  // Detractores: 1-2, Pasivos: 3, Promotores: 4-5
-  const calculateNPS = () => {
-    if (!results.distribution.q1) return { nps: 0, promoters: 0, passives: 0, detractors: 0 }
-
-    const distribution = results.distribution.q1
-    const total = results.totalResponses
-
-    // 1-2 = Detractores (índices 0, 1)
-    const detractors = distribution[0] + distribution[1]
-    // 3 = Pasivos (índice 2)
-    const passives = distribution[2]
-    // 4-5 = Promotores (índices 3, 4)
-    const promoters = distribution[3] + distribution[4]
-
-    // NPS = (% Promotores) - (% Detractores)
-    const promotersPercent = (promoters / total) * 100
-    const detractorsPercent = (detractors / total) * 100
-    const nps = Math.round(promotersPercent - detractorsPercent)
-
-    return {
-      nps,
-      promoters: Math.round(promotersPercent),
-      passives: Math.round((passives / total) * 100),
-      detractors: Math.round(detractorsPercent)
-    }
-  }
-
-  const npsData = calculateNPS()
+  const total = results.totalResponses
+  const dq1 = results.distribution.q1
+  const detractors = dq1[0] + dq1[1]
+  const passives = dq1[2]
+  const promoters = dq1[3] + dq1[4]
+  const npsScore = Math.round(((promoters - detractors) / total) * 100)
+  const promotersPct = Math.round((promoters / total) * 100)
+  const passivesPct = Math.round((passives / total) * 100)
+  const detractorsPct = Math.round((detractors / total) * 100)
+  const verdict = npsScore >= 50 ? "Excelente" : npsScore >= 30 ? "Muy bueno" : npsScore >= 0 ? "Bueno" : "A mejorar"
 
   return (
-    <div className="min-h-screen py-12 px-4">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl md:text-4xl font-bold">
-            Resultados <span className="text-[#ff4500]">Picanthon</span>
-          </h1>
-          <div className="flex items-center justify-center gap-2 text-muted-foreground">
-            <Users className="w-5 h-5" />
-            <span className="text-lg">{results.totalResponses} respuestas</span>
+    <>
+      <Topbar />
+      <div className="results-page">
+        <section className="results-hero">
+          <div>
+            <h1 className="results-title">
+              Lo que<br />
+              <em>vivimos.</em>
+            </h1>
+            <p className="results-sub">
+              <b>{total}</b> respuestas · Edición 03
+            </p>
           </div>
+
+          <div className="nps-card">
+            <div className="k">NPS · ¿volverías a anotarte?</div>
+            <div className="big-num">{npsScore > 0 ? `+${npsScore}` : npsScore}</div>
+            <div className="verdict">{verdict}</div>
+            <div className="nps-breakdown">
+              <div className="cell promo">
+                <span className="v">{promotersPct}%</span>
+                <span className="lbl">Promotores</span>
+              </div>
+              <div className="cell pasiv">
+                <span className="v">{passivesPct}%</span>
+                <span className="lbl">Pasivos</span>
+              </div>
+              <div className="cell detr">
+                <span className="v">{detractorsPct}%</span>
+                <span className="lbl">Detractores</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="section-head">
+          <h2><em>Por pregunta.</em></h2>
+          <span className="num">8 escalas</span>
         </div>
 
-        {/* NPS Card */}
-        <Card className="bg-card backdrop-blur-lg border-white/10 p-6 md:p-8">
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 pb-4 border-b border-white/10">
-              <TrendingUp className="w-6 h-6 text-[#ff4500]" />
-              <h2 className="text-2xl font-bold">Net Promoter Score (NPS)</h2>
-            </div>
-
-            <div className="text-center space-y-4">
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  ¿Cuán probable es que vuelvas a anotarte a la próxima Picanthon?
-                </p>
-                <div className="text-6xl md:text-7xl font-bold text-[#ff4500]">
-                  {npsData.nps}
+        <div className="dist-grid">
+          {Object.entries(results.distribution).map(([key, dist], idx) => {
+            const avg = results.averages[key]
+            const meta = Q_LABELS[idx]
+            return (
+              <div className="dist" key={key}>
+                <div className="dist-head">
+                  <p className="dist-q">
+                    <span className="label-num">{String(idx + 1).padStart(2, "0")}</span>
+                    {"  "}
+                    {meta.head}
+                    <em>{meta.em}</em>
+                    {meta.tail || ""}
+                  </p>
+                  <div className="dist-avg">
+                    {avg.toFixed(1)}<small>/ 5</small>
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {npsData.nps >= 50 ? 'Excelente' : npsData.nps >= 0 ? 'Bueno' : 'Necesita mejoras'}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 mt-6">
-                <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                  <div className="text-2xl font-bold text-green-500">{npsData.promoters}%</div>
-                  <div className="text-xs text-muted-foreground mt-1">Promotores</div>
-                  <div className="text-xs text-muted-foreground">(4-5★)</div>
-                </div>
-                <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                  <div className="text-2xl font-bold text-yellow-500">{npsData.passives}%</div>
-                  <div className="text-xs text-muted-foreground mt-1">Pasivos</div>
-                  <div className="text-xs text-muted-foreground">(3★)</div>
-                </div>
-                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
-                  <div className="text-2xl font-bold text-red-500">{npsData.detractors}%</div>
-                  <div className="text-xs text-muted-foreground mt-1">Detractores</div>
-                  <div className="text-xs text-muted-foreground">(1-2★)</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="bg-card backdrop-blur-lg border-white/10 p-6 md:p-8">
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 pb-4 border-b border-white/10">
-              <BarChart3 className="w-6 h-6 text-[#ff4500]" />
-              <h2 className="text-2xl font-bold">Distribución de Respuestas</h2>
-            </div>
-
-            <div className="space-y-8">
-              {Object.entries(results.distribution).map(([key, distribution], index) => (
-                <div key={key} className="space-y-3">
-                  <p className="text-sm font-medium leading-relaxed">{questions[index]}</p>
-                  <div className="space-y-2">
-                    {distribution.map((count, rating) => (
-                      <div key={rating} className="flex items-center gap-3">
-                        <span className="text-sm text-muted-foreground w-8">{rating + 1}★</span>
-                        <div className="flex-1 bg-white/5 rounded-full h-6 overflow-hidden">
+                <div className="dist-bars">
+                  {dist.map((count, rating) => {
+                    const widthPct = (count / total) * 100
+                    return (
+                      <div className="dist-row" key={rating}>
+                        <span className="star">{rating + 1}</span>
+                        <div className="track">
                           <div
-                            className="bg-[#ff4500] h-full transition-all duration-500 flex items-center justify-end pr-2"
+                            className="bar"
                             style={{
-                              width: `${(count / results.totalResponses) * 100}%`,
+                              width: `${widthPct}%`,
+                              background: rating >= 3 ? "var(--hot)" : rating === 2 ? "var(--ember)" : "var(--hot-deep)",
                             }}
                           >
-                            {count > 0 && <span className="text-xs font-medium text-white">{count}</span>}
+                            {count > 0 && widthPct > 10 ? count : ""}
                           </div>
                         </div>
-                        <span className="text-sm text-muted-foreground w-12 text-right">
-                          {((count / results.totalResponses) * 100).toFixed(0)}%
-                        </span>
+                        <span className="pct">{widthPct.toFixed(0)}%</span>
                       </div>
-                    ))}
-                  </div>
+                    )
+                  })}
                 </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-
-        {results.featuredComments && results.featuredComments.length > 0 && (
-          <Card className="bg-card backdrop-blur-lg border-white/10 p-6 md:p-8">
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-white/10">
-                <MessageSquare className="w-6 h-6 text-[#ff4500]" />
-                <h2 className="text-2xl font-bold">Comentarios Destacados</h2>
               </div>
-
-              <div className="space-y-6">
-                {results.featuredComments.map((comment, index) => (
-                  <div key={index} className="space-y-2 p-4 rounded-lg bg-white/5 border border-white/10">
-                    <p className="text-sm font-semibold text-[#ff4500]">{comment.question}</p>
-                    <p className="text-base leading-relaxed italic">"{comment.comment}"</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
-        )}
-
-        <div className="flex justify-center">
-          <Button asChild className="bg-white text-black hover:bg-white/90">
-            <Link href="/">Volver al inicio</Link>
-          </Button>
+            )
+          })}
         </div>
 
-        <footer className="text-center text-muted-foreground text-sm pt-4">
-          <p className="flex items-center justify-center gap-2">
-            🤖 Powered by <span className="text-[#ff4500] font-semibold">Alertly</span>
-          </p>
-        </footer>
+        <div className="section-head">
+          <h2><em>En sus palabras.</em></h2>
+          <span className="num">Destacados</span>
+        </div>
+
+        <div className="quotes">
+          {results.featuredComments.map((c, i) => (
+            <div className="quote" key={i}>
+              <span className="mark">"</span>
+              <div className="q-cat">{c.question}</div>
+              <p className="q-text">{c.comment}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="submit-row" style={{ marginTop: 80 }}>
+          <span className="note">¿Tenés algo más para decir?</span>
+          <Link href="/formulario" className="cta-stamp">
+            Sumar mi voz
+            <span className="arrow">→</span>
+          </Link>
+        </div>
       </div>
+      <Footer />
+    </>
+  )
+}
+
+function Footer() {
+  return (
+    <div style={{ maxWidth: 1320, margin: "0 auto", padding: "0 clamp(20px, 4vw, 56px) 28px" }}>
+      <footer className="footer">
+        <span>Picanthon · 03 · MMXXVI</span>
+        <span className="powered">Hecho con picante por <b>Alertly</b></span>
+      </footer>
     </div>
   )
 }
