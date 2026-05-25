@@ -1,42 +1,130 @@
+"use client"
+
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
+
+function ArchedLabel({ text, size = 560 }: { text: string; size?: number }) {
+  const r = size / 2 - 28
+  const circumference = 2 * Math.PI * r
+  return (
+    <svg
+      className="arched-label"
+      viewBox={`0 0 ${size} ${size}`}
+      width={size}
+      height={size}
+      aria-hidden="true"
+    >
+      <defs>
+        <path
+          id="arch-circle"
+          d={`M ${size / 2}, ${size / 2} m -${r}, 0 a ${r},${r} 0 1,1 ${r * 2},0 a ${r},${r} 0 1,1 -${r * 2},0`}
+        />
+      </defs>
+      <text className="arched-text">
+        <textPath href="#arch-circle" startOffset="0">
+          {text}
+        </textPath>
+      </text>
+    </svg>
+  )
+}
+
+function Topbar() {
+  const pathname = usePathname()
+  const [locked, setLocked] = useState(true)
+
+  useEffect(() => {
+    const check = () => setLocked(!localStorage.getItem("picanthon_submitted"))
+    check()
+    window.addEventListener("storage", check)
+    const interval = setInterval(check, 600)
+    return () => {
+      window.removeEventListener("storage", check)
+      clearInterval(interval)
+    }
+  }, [])
+
+  return (
+    <header className="topbar">
+      <Link href="/" className="brand">
+        <img src="/chili.png" alt="" aria-hidden className="brand-mark-png" draggable={false} />
+        <span className="brand-name">
+          Picanthon<sup>03</sup>
+        </span>
+      </Link>
+      <nav className="nav">
+        <Link href="/" className={pathname === "/" ? "active" : ""}>
+          Inicio
+        </Link>
+        <Link href="/formulario" className={pathname === "/formulario" ? "active" : ""}>
+          Encuesta
+        </Link>
+        <Link
+          href="/resultados"
+          className={`${pathname === "/resultados" ? "active" : ""} ${locked ? "locked" : ""}`}
+          title={locked ? "Completá la encuesta para desbloquear" : ""}
+        >
+          {locked && <span className="lock-glyph" aria-hidden>◆</span>}
+          Resultados
+        </Link>
+      </nav>
+    </header>
+  )
+}
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="max-w-3xl w-full space-y-8 text-center">
-        <div className="space-y-4">
-          <h1 className="text-4xl md:text-6xl font-bold text-balance">
-            Contanos cómo viviste la <span className="text-[#ff4500]">Picanthon</span>
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground text-pretty max-w-2xl mx-auto leading-relaxed">
-            Queremos entender qué funcionó y qué mejorar para la próxima edición. Tu opinión es fundamental para crear
-            una mejor experiencia.
-          </p>
-        </div>
+    <>
+      <Topbar />
+      <div className="landing">
+        <div className="rail rail-left">Buenos Aires · Argentina · MMXXVI</div>
+        <div className="rail rail-right">Edición 03 · Post-evento · Feedback</div>
 
-        <Card className="bg-card backdrop-blur-lg border-white/10 p-8 md:p-12">
-          <div className="space-y-6">
-            <div className="flex justify-center text-6xl">
-              🌶️
+        <section className="poster">
+          <div className="poster-no">
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <span className="poster-no-lbl" style={{ color: "var(--hot)" }}>Buenos Aires</span>
+              <span className="poster-no-lbl">Edición</span>
             </div>
-            <Button
-              asChild
-              size="lg"
-              className="w-full bg-white text-black hover:bg-white/90 transition-all duration-300 text-lg py-6"
-            >
-              <Link href="/formulario">Completar encuesta</Link>
-            </Button>
+            <span className="poster-no-num">03</span>
           </div>
-        </Card>
 
-        <footer className="pt-8 text-muted-foreground">
-          <p className="flex items-center justify-center gap-2">
-            🤖 Powered by <span className="text-[#ff4500] font-semibold">Alertly</span>
-          </p>
+          <div className="poster-stage">
+            <ArchedLabel
+              text="·  PICANTHON  ·  TU OPINIÓN ENCIENDE LA PRÓXIMA EDICIÓN  ·  PICANTHON  ·  CONTANOS CÓMO LA VIVISTE  "
+              size={620}
+            />
+            <img
+              src="/chili.png"
+              alt=""
+              aria-hidden
+              className="chili-png"
+              style={{ width: 380, height: "auto", display: "block" }}
+              draggable={false}
+            />
+          </div>
+
+          <h1 className="poster-head">
+            <span className="line">Cómo fue</span>
+            <em className="line">tu Picanthon.</em>
+          </h1>
+
+          <Link href="/formulario" className="cta-stamp">
+            Empezar encuesta
+            <span className="arrow">→</span>
+          </Link>
+        </section>
+      </div>
+
+      <div style={{ maxWidth: 1320, margin: "0 auto", padding: "0 clamp(20px, 4vw, 56px) 28px" }}>
+        <footer className="footer">
+          <span>Picanthon · 03 · MMXXVI</span>
+          <span className="powered">
+            Hecho con picante por <b>Alertly</b>
+          </span>
         </footer>
       </div>
-    </div>
+    </>
   )
 }

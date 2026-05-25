@@ -1,145 +1,138 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/hooks/use-toast"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { GOOGLE_SCRIPT_URL } from "@/lib/config"
-import { Wifi, WifiOff, MessageCircle, Loader2 } from "lucide-react"
 
 interface FormData {
-  q1: string
-  q2: string
-  q3: string
-  q4: string
-  q5: string
-  q6: string
-  q7: string
-  q8: string
-  q9: string
-  q10: string
-  q11: string
+  q1: string; q2: string; q3: string; q4: string; q5: string
+  q6: string; q7: string; q8: string; q9: string; q10: string; q11: string
+}
+
+const SCALE_QUESTIONS = [
+  { n: 1, key: "q1", q: "¿Cuán probable es que vuelvas a anotarte a la segunda edición de la Picanthon?" },
+  { n: 2, key: "q2", q: "¿Qué te pareció el lugar?" },
+  { n: 3, key: "q3", q: "¿Qué te pareció la comida?" },
+  { n: 4, key: "q4", q: "¿Cómo fue la experiencia de tu grupo con los mentores?" },
+  { n: 5, key: "q5", q: "¿Qué te parecieron los mini games?" },
+  { n: 6, key: "q6", q: "¿Qué te pareció la consigna y el output esperado?" },
+  { n: 7, key: "q7", q: "¿Qué te pareció la dinámica del pitch / pregunta de mentores? ¿Pudieron transmitir lo que habían creado?" },
+  { n: 8, key: "q8", q: "¿Qué te pareció la decisión final de los jueces?" },
+]
+
+const OPEN_QUESTIONS = [
+  { n: 9, key: "q9", q: "¿Qué mantendrías de la hackathon? ¿Qué fue lo que más te gustó?", placeholder: "Eso que no podía faltar..." },
+  { n: 10, key: "q10", q: "¿Qué cambiarías de la hackathon? ¿Qué fue lo que menos te gustó?", placeholder: "Sin filtro — bienvenido el feedback duro..." },
+  { n: 11, key: "q11", q: "¿Qué agregarías a la Picanthon?", placeholder: "Una idea, un detalle, un experimento..." },
+]
+
+const LABELS = ["nada", "poco", "medio", "alto", "picante"]
+
+function HeatMeter({ value, onChange, name }: { value: string; onChange: (v: string) => void; name: string }) {
+  return (
+    <div className="heat-meter" role="radiogroup" aria-label={name}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          type="button"
+          key={n}
+          className={`heat-cell${value === String(n) ? " selected" : ""}`}
+          data-level={n}
+          onClick={() => onChange(String(n))}
+          role="radio"
+          aria-checked={value === String(n)}
+        >
+          <span className="heat-fill" />
+          <span className="heat-num">{n}</span>
+          <span className="heat-label">{LABELS[n - 1]}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function Topbar() {
+  const pathname = usePathname()
+  const [locked, setLocked] = useState(true)
+  useEffect(() => {
+    const check = () => setLocked(!localStorage.getItem("picanthon_submitted"))
+    check()
+    window.addEventListener("storage", check)
+    const interval = setInterval(check, 600)
+    return () => { window.removeEventListener("storage", check); clearInterval(interval) }
+  }, [])
+  return (
+    <header className="topbar">
+      <Link href="/" className="brand">
+        <img src="/chili.png" alt="" aria-hidden className="brand-mark-png" draggable={false} />
+        <span className="brand-name">Picanthon<sup>03</sup></span>
+      </Link>
+      <nav className="nav">
+        <Link href="/" className={pathname === "/" ? "active" : ""}>Inicio</Link>
+        <Link href="/formulario" className={pathname === "/formulario" ? "active" : ""}>Encuesta</Link>
+        <Link href="/resultados" className={`${pathname === "/resultados" ? "active" : ""} ${locked ? "locked" : ""}`}>
+          {locked && <span className="lock-glyph" aria-hidden>◆</span>}
+          Resultados
+        </Link>
+      </nav>
+    </header>
+  )
+}
+
+function Toast({ msg, kind }: { msg: string | null; kind?: string }) {
+  if (!msg) return null
+  return <div className={`toast-pill${kind === "err" ? " err" : ""}`}>{msg}</div>
 }
 
 export default function FormularioPage() {
   const router = useRouter()
-  const { toast } = useToast()
   const [isOnline, setIsOnline] = useState(true)
-  const [isFromWhatsApp, setIsFromWhatsApp] = useState(false)
   const [hasSubmitted, setHasSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [formData, setFormData] = useState<FormData>({
-    q1: "",
-    q2: "",
-    q3: "",
-    q4: "",
-    q5: "",
-    q6: "",
-    q7: "",
-    q8: "",
-    q9: "",
-    q10: "",
-    q11: "",
-  })
+  const [toast, setToast] = useState<{ msg: string; kind: string } | null>(null)
+  const emptyData = (): FormData => ({ q1:"",q2:"",q3:"",q4:"",q5:"",q6:"",q7:"",q8:"",q9:"",q10:"",q11:"" })
+  const [data, setData] = useState<FormData>(emptyData)
 
   useEffect(() => {
-    // Check online status
     setIsOnline(navigator.onLine)
-    const handleOnline = () => setIsOnline(true)
-    const handleOffline = () => setIsOnline(false)
-    window.addEventListener("online", handleOnline)
-    window.addEventListener("offline", handleOffline)
-
-    // Check if coming from WhatsApp
-    const userAgent = navigator.userAgent.toLowerCase()
-    setIsFromWhatsApp(userAgent.includes("whatsapp"))
-
-    // Check if already submitted
-    const submitted = localStorage.getItem("picanthon_submitted")
-    if (submitted) {
-      setHasSubmitted(true)
-    }
-
-    return () => {
-      window.removeEventListener("online", handleOnline)
-      window.removeEventListener("offline", handleOffline)
-    }
+    const on = () => setIsOnline(true)
+    const off = () => setIsOnline(false)
+    window.addEventListener("online", on)
+    window.addEventListener("offline", off)
+    if (localStorage.getItem("picanthon_submitted")) setHasSubmitted(true)
+    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off) }
   }, [])
+
+  const filled = Object.values(data).filter((v) => v.trim() !== "").length
+  const total = SCALE_QUESTIONS.length + OPEN_QUESTIONS.length
+
+  const showToast = (msg: string, kind: string) => {
+    setToast({ msg, kind })
+    setTimeout(() => setToast(null), 2600)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    // Validate all fields
-    const allFieldsFilled = Object.values(formData).every((value) => value.trim() !== "")
-    if (!allFieldsFilled) {
-      toast({
-        title: "Campos incompletos",
-        description: "Por favor completá todas las preguntas antes de enviar.",
-        variant: "destructive",
-      })
+    if (filled < total) {
+      showToast(`Faltan ${total - filled} respuestas`, "err")
       return
     }
-
     setIsSubmitting(true)
-
     try {
-      // Generate unique ID compatible with older browsers and WhatsApp
       const submissionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      const timestamp = new Date().toISOString()
-
-      const submission = {
-        id: submissionId,
-        timestamp,
-        ...formData,
-        userAgent: navigator.userAgent,
-        isFromWhatsApp,
-      }
-
-      // Save to localStorage
+      const submission = { id: submissionId, timestamp: new Date().toISOString(), ...data, userAgent: navigator.userAgent }
       localStorage.setItem("picanthon_submission", JSON.stringify(submission))
       localStorage.setItem("picanthon_submitted", "true")
-
-      // Send to Google Sheets via Apps Script
       if (GOOGLE_SCRIPT_URL) {
         try {
-          const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors', // Google Apps Script requiere no-cors
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(submission),
-          })
-
-          // Con no-cors no podemos leer la respuesta, pero si no da error, asumimos que funcionó
-          console.log('[v0] Form submitted to Google Sheets')
-        } catch (error) {
-          console.error('[v0] Error sending to Google Sheets:', error)
-          // No mostramos error al usuario porque ya guardamos en localStorage
-        }
-      } else {
-        console.warn('[v0] GOOGLE_SCRIPT_URL not configured, skipping cloud sync')
+          await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(submission) })
+        } catch {}
       }
-
-      toast({
-        title: "¡Gracias por tu feedback!",
-        description: "Tu respuesta ha sido enviada exitosamente.",
-      })
-
       router.push("/resultados")
-    } catch (error) {
-      console.error("[v0] Error submitting form:", error)
-      toast({
-        title: "Error al enviar",
-        description: "Hubo un problema al enviar tu respuesta. Por favor intentá de nuevo.",
-        variant: "destructive",
-      })
+    } catch {
+      showToast("Error al enviar — intentá de nuevo", "err")
     } finally {
       setIsSubmitting(false)
     }
@@ -149,229 +142,132 @@ export default function FormularioPage() {
     localStorage.removeItem("picanthon_submitted")
     localStorage.removeItem("picanthon_submission")
     setHasSubmitted(false)
-    setFormData({
-      q1: "",
-      q2: "",
-      q3: "",
-      q4: "",
-      q5: "",
-      q6: "",
-      q7: "",
-      q8: "",
-      q9: "",
-      q10: "",
-      q11: "",
-    })
+    setData(emptyData())
   }
 
   if (hasSubmitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="bg-card backdrop-blur-lg border-white/10 p-8 max-w-md w-full text-center space-y-6">
-          <h2 className="text-2xl font-bold">Ya enviaste tu respuesta</h2>
-          <p className="text-muted-foreground">
-            Gracias por completar la encuesta. Si querés enviar una nueva respuesta, hacé click en el botón de abajo.
-          </p>
-          <Button onClick={handleNewResponse} className="w-full bg-white text-black hover:bg-white/90">
-            Enviar nueva respuesta
-          </Button>
-        </Card>
-      </div>
+      <>
+        <Topbar />
+        <div className="form-page">
+          <div className="done-state">
+            <div className="eyebrow" style={{ marginBottom: 28 }}>
+              <span style={{ color: "var(--hot)" }}>●</span>&nbsp; Estado: enviado
+            </div>
+            <h1 className="big">
+              Ya nos<br />
+              <em>contaste</em>.
+            </h1>
+            <p className="copy">Gracias. Si te acordaste de algo, podés empezar de nuevo.</p>
+            <div className="done-actions">
+              <Link href="/resultados" className="cta-stamp">
+                Ver resultados
+                <span className="arrow">→</span>
+              </Link>
+              <button className="btn-ghost" onClick={handleNewResponse}>
+                Empezar de nuevo
+              </button>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
     )
   }
 
   return (
-    <div className="min-h-screen py-12 px-4">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl md:text-4xl font-bold">
-            Encuesta <span className="text-[#ff4500]">Picanthon</span>
+    <>
+      <Topbar />
+      <div className="form-page">
+        <header className="form-header">
+          <h1 className="form-title">
+            <em>Contanos.</em>
           </h1>
-          <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              {isOnline ? (
-                <>
-                  <Wifi className="w-4 h-4 text-green-500" />
-                  <span>En línea</span>
-                </>
-              ) : (
-                <>
-                  <WifiOff className="w-4 h-4 text-red-500" />
-                  <span>Sin conexión</span>
-                </>
-              )}
-            </div>
-            {isFromWhatsApp && (
-              <div className="flex items-center gap-2">
-                <MessageCircle className="w-4 h-4 text-[#25D366]" />
-                <span>Desde WhatsApp</span>
-              </div>
-            )}
+          <div className="status-strip">
+            <span className={`pill ${isOnline ? "online" : "offline"}`}>
+              <span className="dot" />
+              {isOnline ? "En línea" : "Sin conexión"}
+            </span>
+          </div>
+        </header>
+
+        <div className="progress-strip">
+          <div className="progress-row">
+            <span className="label">11 preguntas · ≈ 2 min</span>
+            <span className="count">
+              <b>{filled}</b> / {total}
+            </span>
+          </div>
+          <div className="progress-bar">
+            <div className="fill" style={{ width: `${(filled / total) * 100}%` }} />
           </div>
         </div>
 
-        <Card className="bg-card backdrop-blur-lg border-white/10 p-6 md:p-8">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Scale Questions */}
-            <ScaleQuestion
-              number={1}
-              question="¿Del 1 al 5 cuán probable es que vuelvas a anotarte a la segunda edición de la Picanthon?"
-              value={formData.q1}
-              onChange={(value) => setFormData({ ...formData, q1: value })}
-            />
+        <form onSubmit={handleSubmit}>
+          {SCALE_QUESTIONS.map((q) => (
+            <div className="question" key={q.key}>
+              <div className="q-num">
+                {String(q.n).padStart(2, "0")}
+                <small>Escala · 1–5</small>
+              </div>
+              <div className="q-body">
+                <p className="q-text">{q.q}</p>
+                <HeatMeter
+                  name={q.key}
+                  value={(data as Record<string, string>)[q.key]}
+                  onChange={(v) => setData({ ...data, [q.key]: v })}
+                />
+              </div>
+            </div>
+          ))}
 
-            <ScaleQuestion
-              number={2}
-              question="¿Del 1 al 5 qué te pareció el lugar?"
-              value={formData.q2}
-              onChange={(value) => setFormData({ ...formData, q2: value })}
-            />
+          {OPEN_QUESTIONS.map((q) => (
+            <div className="question" key={q.key}>
+              <div className="q-num">
+                {String(q.n).padStart(2, "0")}
+                <small>Abierta</small>
+              </div>
+              <div className="q-body">
+                <p className="q-text">{q.q}</p>
+                <textarea
+                  className="q-textarea"
+                  placeholder={q.placeholder}
+                  value={(data as Record<string, string>)[q.key]}
+                  onChange={(e) => setData({ ...data, [q.key]: e.target.value })}
+                  rows={3}
+                />
+                <div className="q-textarea-meta">
+                  <span>{(data as Record<string, string>)[q.key].length > 0 ? `${(data as Record<string, string>)[q.key].length} caracteres` : ""}</span>
+                </div>
+              </div>
+            </div>
+          ))}
 
-            <ScaleQuestion
-              number={3}
-              question="¿Del 1 al 5 qué te pareció la comida?"
-              value={formData.q3}
-              onChange={(value) => setFormData({ ...formData, q3: value })}
-            />
-
-            <ScaleQuestion
-              number={4}
-              question="¿Del 1 al 5 cómo fue la experiencia de tu grupo con los mentores?"
-              value={formData.q4}
-              onChange={(value) => setFormData({ ...formData, q4: value })}
-            />
-
-            <ScaleQuestion
-              number={5}
-              question="¿Del 1 al 5 qué te parecieron los mini games?"
-              value={formData.q5}
-              onChange={(value) => setFormData({ ...formData, q5: value })}
-            />
-
-            <ScaleQuestion
-              number={6}
-              question="¿Del 1 al 5 qué te pareció la consigna y el output esperado?"
-              value={formData.q6}
-              onChange={(value) => setFormData({ ...formData, q6: value })}
-            />
-
-            <ScaleQuestion
-              number={7}
-              question="¿Del 1 al 5 qué te pareció la dinámica del pitch/pregunta de mentores? (¿Pudieron transmitir lo que habían creado?)"
-              value={formData.q7}
-              onChange={(value) => setFormData({ ...formData, q7: value })}
-            />
-
-            <ScaleQuestion
-              number={8}
-              question="¿Del 1 al 5 qué te pareció la decisión final de los jueces?"
-              value={formData.q8}
-              onChange={(value) => setFormData({ ...formData, q8: value })}
-            />
-
-            {/* Open-ended Questions */}
-            <OpenQuestion
-              number={9}
-              question="¿Qué mantendrías de la hackathon? ¿Qué fue lo que más te gustó?"
-              value={formData.q9}
-              onChange={(value) => setFormData({ ...formData, q9: value })}
-            />
-
-            <OpenQuestion
-              number={10}
-              question="¿Qué cambiarías de la hackathon? ¿Qué fue lo que menos te gustó?"
-              value={formData.q10}
-              onChange={(value) => setFormData({ ...formData, q10: value })}
-            />
-
-            <OpenQuestion
-              number={11}
-              question="¿Qué agregarías a la Picanthon?"
-              value={formData.q11}
-              onChange={(value) => setFormData({ ...formData, q11: value })}
-            />
-
-            <Button
-              type="submit"
-              className="w-full bg-white text-black hover:bg-white/90 transition-all duration-300 text-lg py-6"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                "Enviar respuestas"
-              )}
-            </Button>
-          </form>
-        </Card>
-
-        <footer className="text-center text-muted-foreground text-sm">
-          <p className="flex items-center justify-center gap-2">
-            🤖 Powered by <span className="text-[#ff4500] font-semibold">Alertly</span>
-          </p>
-        </footer>
-      </div>
-    </div>
-  )
-}
-
-function ScaleQuestion({
-  number,
-  question,
-  value,
-  onChange,
-}: {
-  number: number
-  question: string
-  value: string
-  onChange: (value: string) => void
-}) {
-  return (
-    <div className="space-y-3">
-      <Label className="text-base font-medium leading-relaxed">
-        {number}. {question}
-      </Label>
-      <RadioGroup value={value} onValueChange={onChange} className="flex gap-4">
-        {[1, 2, 3, 4, 5].map((num) => (
-          <div key={num} className="flex items-center space-x-2">
-            <RadioGroupItem value={num.toString()} id={`q${number}-${num}`} className="border-white/20" />
-            <Label htmlFor={`q${number}-${num}`} className="cursor-pointer font-normal">
-              {num}
-            </Label>
+          <div className="submit-row">
+            <span className="note">
+              {filled === total ? "Listo — enviá" : `Faltan ${total - filled}`}
+            </span>
+            <button type="submit" className="submit-btn" disabled={isSubmitting || filled < total}>
+              {isSubmitting ? "Enviando..." : "Enviar"}
+              <span className="arrow">→</span>
+            </button>
           </div>
-        ))}
-      </RadioGroup>
-    </div>
+        </form>
+
+        <Toast msg={toast?.msg ?? null} kind={toast?.kind} />
+      </div>
+      <Footer />
+    </>
   )
 }
 
-function OpenQuestion({
-  number,
-  question,
-  value,
-  onChange,
-}: {
-  number: number
-  question: string
-  value: string
-  onChange: (value: string) => void
-}) {
+function Footer() {
   return (
-    <div className="space-y-3">
-      <Label htmlFor={`q${number}`} className="text-base font-medium leading-relaxed">
-        {number}. {question}
-      </Label>
-      <Textarea
-        id={`q${number}`}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Escribí tu respuesta aquí..."
-        className="min-h-24 bg-input border-white/10 focus:border-[#ff4500]/50 resize-none"
-        rows={3}
-      />
+    <div style={{ maxWidth: 1320, margin: "0 auto", padding: "0 clamp(20px, 4vw, 56px) 28px" }}>
+      <footer className="footer">
+        <span>Picanthon · 03 · MMXXVI</span>
+        <span className="powered">Hecho con picante por <b>Alertly</b></span>
+      </footer>
     </div>
   )
 }
