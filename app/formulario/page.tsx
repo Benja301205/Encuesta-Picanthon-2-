@@ -61,7 +61,7 @@ export default function FormularioPage() {
     setIsFromWhatsApp(userAgent.includes("whatsapp"))
 
     // Check if already submitted
-    const submitted = localStorage.getItem("picanthon_submitted")
+    const submitted = localStorage.getItem("picanthon3_submitted")
     if (submitted) {
       setHasSubmitted(true)
     }
@@ -102,8 +102,8 @@ export default function FormularioPage() {
       }
 
       // Save to localStorage
-      localStorage.setItem("picanthon_submission", JSON.stringify(submission))
-      localStorage.setItem("picanthon_submitted", "true")
+      localStorage.setItem("picanthon3_submission", JSON.stringify(submission))
+      localStorage.setItem("picanthon3_submitted", "true")
 
       // Send to Google Sheets via Apps Script
       if (GOOGLE_SCRIPT_URL) {
@@ -146,8 +146,8 @@ export default function FormularioPage() {
   }
 
   const handleNewResponse = () => {
-    localStorage.removeItem("picanthon_submitted")
-    localStorage.removeItem("picanthon_submission")
+    localStorage.removeItem("picanthon3_submitted")
+    localStorage.removeItem("picanthon3_submission")
     setHasSubmitted(false)
     setFormData({
       q1: "",
