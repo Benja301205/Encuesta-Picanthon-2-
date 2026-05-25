@@ -215,7 +215,7 @@ export default function FormularioPage() {
             {/* Scale Questions */}
             <ScaleQuestion
               number={1}
-              question="¿Del 1 al 5 cuán probable es que vuelvas a anotarte a la segunda edición de la Picanthon?"
+              question="¿Del 1 al 5 cuán probable es que vuelvas a anotarte a la tercera edición de la Picanthon?"
               value={formData.q1}
               onChange={(value) => setFormData({ ...formData, q1: value })}
             />
