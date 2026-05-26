@@ -237,13 +237,6 @@ export default function ResultadosPage() {
           ))}
         </div>
 
-        <div className="submit-row" style={{ marginTop: 80 }}>
-          <span className="note">¿Tenés algo más para decir?</span>
-          <Link href="/formulario" className="cta-stamp">
-            Sumar mi voz
-            <span className="arrow">→</span>
-          </Link>
-        </div>
       </div>
       <Footer />
     </>
