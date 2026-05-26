@@ -13,7 +13,7 @@ interface FormData {
 }
 
 const SCALE_QUESTIONS = [
-  { n: 1, key: "q1", q: "¿Cuán probable es que vuelvas a anotarte a la segunda edición de la Picanthon?" },
+  { n: 1, key: "q1", q: "¿Cuán probable es que vuelvas a anotarte a la tercera edición de la Picanthon?" },
   { n: 2, key: "q2", q: "¿Qué te pareció el lugar?" },
   { n: 3, key: "q3", q: "¿Qué te pareció la comida?" },
   { n: 4, key: "q4", q: "¿Cómo fue la experiencia de tu grupo con los mentores?" },
@@ -57,7 +57,7 @@ function Topbar() {
   const pathname = usePathname()
   const [locked, setLocked] = useState(true)
   useEffect(() => {
-    const check = () => setLocked(!localStorage.getItem("picanthon_submitted"))
+    const check = () => setLocked(!localStorage.getItem("picanthon3_submitted"))
     check()
     window.addEventListener("storage", check)
     const interval = setInterval(check, 600)
@@ -101,7 +101,7 @@ export default function FormularioPage() {
     const off = () => setIsOnline(false)
     window.addEventListener("online", on)
     window.addEventListener("offline", off)
-    if (localStorage.getItem("picanthon_submitted")) setHasSubmitted(true)
+    if (localStorage.getItem("picanthon3_submitted")) setHasSubmitted(true)
     return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off) }
   }, [])
 
@@ -123,8 +123,8 @@ export default function FormularioPage() {
     try {
       const submissionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       const submission = { id: submissionId, timestamp: new Date().toISOString(), ...data, userAgent: navigator.userAgent }
-      localStorage.setItem("picanthon_submission", JSON.stringify(submission))
-      localStorage.setItem("picanthon_submitted", "true")
+      localStorage.setItem("picanthon3_submission", JSON.stringify(submission))
+      localStorage.setItem("picanthon3_submitted", "true")
       if (GOOGLE_SCRIPT_URL) {
         try {
           await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(submission) })
@@ -139,8 +139,8 @@ export default function FormularioPage() {
   }
 
   const handleNewResponse = () => {
-    localStorage.removeItem("picanthon_submitted")
-    localStorage.removeItem("picanthon_submission")
+    localStorage.removeItem("picanthon3_submitted")
+    localStorage.removeItem("picanthon3_submission")
     setHasSubmitted(false)
     setData(emptyData())
   }

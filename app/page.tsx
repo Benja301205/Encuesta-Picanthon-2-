@@ -35,7 +35,7 @@ function Topbar() {
   const [locked, setLocked] = useState(true)
 
   useEffect(() => {
-    const check = () => setLocked(!localStorage.getItem("picanthon_submitted"))
+    const check = () => setLocked(!localStorage.getItem("picanthon3_submitted"))
     check()
     window.addEventListener("storage", check)
     const interval = setInterval(check, 600)
