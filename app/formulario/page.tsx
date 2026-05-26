@@ -126,9 +126,15 @@ export default function FormularioPage() {
       localStorage.setItem("picanthon3_submission", JSON.stringify(submission))
       localStorage.setItem("picanthon3_submitted", "true")
       if (GOOGLE_SCRIPT_URL) {
-        try {
-          await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(submission) })
-        } catch {}
+        const body = JSON.stringify(submission)
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body })
+            break
+          } catch {
+            if (attempt < 3) await new Promise((r) => setTimeout(r, attempt * 1000))
+          }
+        }
       }
       router.push("/resultados")
     } catch {
