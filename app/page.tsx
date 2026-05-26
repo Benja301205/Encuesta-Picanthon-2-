@@ -10,6 +10,9 @@ export default function HomePage() {
           <h1 className="text-4xl md:text-6xl font-bold text-balance">
             Contanos cómo viviste la <span className="text-[#ff4500]">Picanthon</span>
           </h1>
+          <p className="text-base md:text-lg text-muted-foreground font-medium tracking-wide">
+            — Edición 03 · Buenos Aires —
+          </p>
           <p className="text-lg md:text-xl text-muted-foreground text-pretty max-w-2xl mx-auto leading-relaxed">
             Queremos entender qué funcionó y qué mejorar para la próxima edición. Tu opinión es fundamental para crear
             una mejor experiencia.

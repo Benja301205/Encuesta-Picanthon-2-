@@ -187,6 +187,9 @@ export default function FormularioPage() {
           <h1 className="text-3xl md:text-4xl font-bold">
             Encuesta <span className="text-[#ff4500]">Picanthon</span>
           </h1>
+          <p className="text-sm text-muted-foreground font-medium tracking-wide">
+            — Edición 03 · Buenos Aires —
+          </p>
           <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               {isOnline ? (
