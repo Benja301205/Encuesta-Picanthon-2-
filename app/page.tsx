@@ -78,16 +78,14 @@ export default function HomePage() {
     <>
       <Topbar />
       <div className="landing">
-        <div className="rail rail-left">Buenos Aires · Argentina · MMXXVI</div>
+        <div className="rail rail-left">Buenos Aires · Argentina · 2026</div>
         <div className="rail rail-right">Edición 03 · Post-evento · Feedback</div>
 
         <section className="poster">
           <div className="poster-no">
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <span className="poster-no-lbl" style={{ color: "var(--hot)" }}>Buenos Aires</span>
-              <span className="poster-no-lbl">Edición</span>
-            </div>
+            <span className="poster-no-lbl">Edición</span>
             <span className="poster-no-num">03</span>
+            <span className="poster-no-lbl">Buenos Aires</span>
           </div>
 
           <div className="poster-stage">
@@ -119,7 +117,7 @@ export default function HomePage() {
 
       <div style={{ maxWidth: 1320, margin: "0 auto", padding: "0 clamp(20px, 4vw, 56px) 28px" }}>
         <footer className="footer">
-          <span>Picanthon · 03 · MMXXVI</span>
+          <span>Picanthon · 03 · 2026</span>
           <span className="powered">
             Hecho con picante por <b>Alertly</b>
           </span>
