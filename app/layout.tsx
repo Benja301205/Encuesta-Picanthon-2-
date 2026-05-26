@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Analytics } from "@vercel/analytics/next"
+import { ErrorBoundary } from "@/components/error-boundary"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -24,9 +25,11 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <div className="page-wrap">
-          {children}
-        </div>
+        <ErrorBoundary>
+          <div className="page-wrap">
+            {children}
+          </div>
+        </ErrorBoundary>
         <Analytics />
       </body>
     </html>
