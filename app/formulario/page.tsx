@@ -8,25 +8,24 @@ import { usePathname } from "next/navigation"
 import { GOOGLE_SCRIPT_URL } from "@/lib/config"
 
 interface FormData {
-  q1: string; q2: string; q3: string; q4: string; q5: string
+  q1: string; q2: string; q3: string; q4: string
   q6: string; q7: string; q8: string; q9: string; q10: string; q11: string
 }
 
 const SCALE_QUESTIONS = [
-  { n: 1, key: "q1", q: "¿Cuán probable es que vuelvas a anotarte a la tercera edición de la Picanthon?" },
+  { n: 1, key: "q1", q: "¿Qué tan probable es que te anotés en la 4ta Edición de la Picanthon?" },
   { n: 2, key: "q2", q: "¿Qué te pareció el lugar?" },
   { n: 3, key: "q3", q: "¿Qué te pareció la comida?" },
   { n: 4, key: "q4", q: "¿Cómo fue la experiencia de tu grupo con los mentores?" },
-  { n: 5, key: "q5", q: "¿Qué te parecieron los mini games?" },
-  { n: 6, key: "q6", q: "¿Qué te pareció la consigna y el output esperado?" },
-  { n: 7, key: "q7", q: "¿Qué te pareció la dinámica del pitch / pregunta de mentores? ¿Pudieron transmitir lo que habían creado?" },
-  { n: 8, key: "q8", q: "¿Qué te pareció la decisión final de los jueces?" },
+  { n: 5, key: "q6", q: "¿Qué te pareció la consigna y el output esperado?" },
+  { n: 6, key: "q7", q: "¿Qué te pareció la dinámica de la Presentación? ¿Pudieron transmitir lo que habían creado?" },
+  { n: 7, key: "q8", q: "¿Qué te pareció la decisión final de los jueces?" },
 ]
 
 const OPEN_QUESTIONS = [
-  { n: 9, key: "q9", q: "¿Qué mantendrías de la hackathon? ¿Qué fue lo que más te gustó?", placeholder: "Eso que no podía faltar..." },
-  { n: 10, key: "q10", q: "¿Qué cambiarías de la hackathon? ¿Qué fue lo que menos te gustó?", placeholder: "Sin filtro — bienvenido el feedback duro..." },
-  { n: 11, key: "q11", q: "¿Qué agregarías a la Picanthon?", placeholder: "Una idea, un detalle, un experimento..." },
+  { n: 8, key: "q9", q: "¿Qué mantendrías de la hackathon? ¿Qué fue lo que más te gustó?", placeholder: "Eso que no podía faltar..." },
+  { n: 9, key: "q10", q: "¿Qué cambiarías de la hackathon? ¿Qué fue lo que menos te gustó?", placeholder: "Sin filtro — bienvenido el feedback duro..." },
+  { n: 10, key: "q11", q: "¿Qué agregarías a la Picanthon?", placeholder: "Una idea, un detalle, un experimento..." },
 ]
 
 const LABELS = ["nada", "poco", "medio", "alto", "picante"]
@@ -92,7 +91,7 @@ export default function FormularioPage() {
   const [hasSubmitted, setHasSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [toast, setToast] = useState<{ msg: string; kind: string } | null>(null)
-  const emptyData = (): FormData => ({ q1:"",q2:"",q3:"",q4:"",q5:"",q6:"",q7:"",q8:"",q9:"",q10:"",q11:"" })
+  const emptyData = (): FormData => ({ q1:"",q2:"",q3:"",q4:"",q6:"",q7:"",q8:"",q9:"",q10:"",q11:"" })
   const [data, setData] = useState<FormData>(emptyData)
 
   useEffect(() => {
