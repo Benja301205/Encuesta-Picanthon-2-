@@ -248,7 +248,7 @@ function Footer() {
     <div style={{ maxWidth: 1320, margin: "0 auto", padding: "0 clamp(20px, 4vw, 56px) 28px" }}>
       <footer className="footer">
         <span>Picanthon · 03 · 2026</span>
-        <span className="powered">Hecho con picante por <b>Alertly</b></span>
+        <span className="powered">Hecho con picante por <a href="https://www.linkedin.com/in/benjamin-bertone-20213a201" target="_blank" rel="noopener noreferrer" style={{ color: "#ff4500", fontWeight: 700, fontSize: "1.05em", textDecoration: "none" }}>Benja Bertone</a></span>
       </footer>
     </div>
   )
