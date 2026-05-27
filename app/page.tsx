@@ -119,7 +119,7 @@ export default function HomePage() {
         <footer className="footer">
           <span>Picanthon · 03 · 2026</span>
           <span className="powered">
-            Hecho con picante por <a href="https://www.linkedin.com/in/benjamin-bertone-20213a201" target="_blank" rel="noopener noreferrer" style={{ color: "#ff4500", fontWeight: 700, fontSize: "1.05em", textDecoration: "none" }}>Benja Bertone</a>
+            Hecho con picante por <a href="https://www.linkedin.com/in/benjamin-bertone-20213a201" target="_blank" rel="noopener noreferrer" style={{ color: "#ff4500", fontWeight: 700, fontSize: "1.05em", textDecoration: "underline", textUnderlineOffset: "3px" }}>Benja Bertone</a>
           </span>
         </footer>
       </div>
