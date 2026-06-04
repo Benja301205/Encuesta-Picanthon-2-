@@ -109,7 +109,11 @@ export default function TramaPage() {
         {/* ── HERO ──────────────────────────────── */}
         <div className="results-hero">
           <div>
-            <p className="eyebrow">BootCamp Emprendedores · Trama ITBA · Ed {DATA.edicion}</p>
+            <div className={styles.heroLogo}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-bootcamp.png" alt="BootCamp Emprendedores" />
+            </div>
+            <p className="eyebrow">Trama ITBA · Ed {DATA.edicion} · {DATA.periodo}</p>
             <h1 className="results-title">
               Boot<br /><em>Camp</em>
             </h1>
@@ -266,7 +270,11 @@ export default function TramaPage() {
 
         {/* ── FOOTER ────────────────────────────── */}
         <footer className={styles.pageFooter}>
-          <span>BootCamp Emprendedores · Ed {DATA.edicion} · Trama ITBA · {DATA.periodo}</span>
+          <div className={styles.footerLeft}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-bootcamp.png" alt="BootCamp" className={styles.footerLogo} />
+            <span>BootCamp Emprendedores · Ed {DATA.edicion} · Trama ITBA · {DATA.periodo}</span>
+          </div>
           <span className={styles.footerCredit}>
             Análisis por{' '}
             <a
