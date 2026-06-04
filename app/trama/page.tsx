@@ -111,7 +111,7 @@ export default function TramaPage() {
           <div>
             <div className={styles.heroLogo}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-bootcamp.png" alt="BootCamp Emprendedores" />
+              <img src="/logo-bc.png" alt="BootCamp Emprendedores" />
             </div>
             <p className="eyebrow">Trama ITBA · Ed {DATA.edicion} · {DATA.periodo}</p>
             <h1 className="results-title">
@@ -272,7 +272,7 @@ export default function TramaPage() {
         <footer className={styles.pageFooter}>
           <div className={styles.footerLeft}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-bootcamp.png" alt="BootCamp" className={styles.footerLogo} />
+            <img src="/logo-bc.png" alt="BootCamp" className={styles.footerLogo} />
             <span>BootCamp Emprendedores · Ed {DATA.edicion} · Trama ITBA · {DATA.periodo}</span>
           </div>
           <span className={styles.footerCredit}>
